@@ -74,9 +74,9 @@ type Polyline = Vec<Vec2D>;
 /// returns distance from x to closest point on the given polylines P
 fn distance_polylines(x: &Vec2D, P: &Vec<Polyline>) -> f64 {
   let mut d = INFINITY; // minimum distance so far
-  for i in 0..P.len() {
-    for j in 0..(P[i].len() - 1) {
-      let y = closest_point(x, &P[i][j], &P[i][j + 1]); // distance to segment
+  for p in P {
+    for j in 0..(p.len() - 1) {
+      let y = closest_point(x, &p[j], &p[j + 1]); // distance to segment
       d = d.min(length(&(x - y))); // update minimum distance
     }
   }
@@ -86,10 +86,10 @@ fn distance_polylines(x: &Vec2D, P: &Vec<Polyline>) -> f64 {
 /// returns distance from x to closest silhouette point on the given polylines P
 fn silhouette_distance_polylines(x: &Vec2D, P: &Vec<Polyline>) -> f64 {
   let mut d = INFINITY; // minimum distance so far
-  for i in 0..P.len() {
-    for j in 1..(P[i].len() - 1) {
-      if is_silhouette(x, &P[i][j - 1], &P[i][j], &P[i][j + 1]) {
-        d = d.min(length(&(x - P[i][j]))); // update minimum distance
+  for p in P {
+    for j in 1..(p.len() - 1) {
+      if is_silhouette(x, &p[j - 1], &p[j], &p[j + 1]) {
+        d = d.min(length(&(x - p[j]))); // update minimum distance
       }
     }
   }
@@ -111,13 +111,13 @@ fn intersect_polylines(
   let mut t_min = r; // smallest hit time so far
   *n = Vec2D::new(0.0, 0.0); // first hit normal
   *on_boundary = false; // will be true only if the first hit is on a segment
-  for i in 0..P.len() {
-    for j in 0..(P[i].len() - 1) {
+  for p in P {
+    for j in 0..(p.len() - 1) {
       let c = 1e-5; // ray offset (to avoid self-intersection)
-      let t = ray_intersection(&(x + c * v), v, &P[i][j], &P[i][j + 1]);
+      let t = ray_intersection(&(x + c * v), v, &p[j], &p[j + 1]);
       if t < t_min { // closest hit so far
         t_min = t;
-        *n = rot90(&(P[i][j + 1] - P[i][j])); // get normal
+        *n = rot90(&(p[j + 1] - p[j])); // get normal
         *n /= length(n); // make normal unit length
         *on_boundary = true;
       }
@@ -164,7 +164,7 @@ fn solve(
         theta = theta / 2. + angle_of(&n);
       }
       let v = vec2d(theta.cos(), theta.sin()); // unit ray direction
-      x = intersect_polylines(&x, &v, r, &boundary_neumann, &mut n, &mut on_boundary);
+      x = intersect_polylines(&x, &v, r, boundary_neumann, &mut n, &mut on_boundary);
 
       steps += 1;
 
@@ -191,9 +191,9 @@ fn lines(x: &Vec2D) -> f64 {
 /// checks whether a given evaluation point is actually inside the domain
 fn signed_angle(x: &Vec2D, P: &Vec<Polyline>) -> f64 {
   let mut theta = 0.;
-  for i in 0..P.len() {
-    for j in 0..(P[i].len() - 1) {
-      theta += angle_of(&((P[i][j + 1] - x) / (P[i][j] - x)));
+  for p in P {
+    for j in 0..(p.len() - 1) {
+      theta += angle_of(&((p[j + 1] - x) / (p[j] - x)));
     }
   }
   theta
@@ -247,7 +247,7 @@ fn main() -> std::io::Result<()> {
         write!(out, ",")?;
       }
     }
-    writeln!(out, "");
+    writeln!(out)?;
     out.flush()?;
   }
   out.flush()?;
