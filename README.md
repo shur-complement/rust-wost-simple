@@ -10,4 +10,6 @@ This project is a toy implementation of _Walk on Stars_
 
 following the guide at: https://github.com/GeometryCollective/wost-simple .
 
+Full credits to the original authors.
+
 It is written in pure Rust to compare with C++.
